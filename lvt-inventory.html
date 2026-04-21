@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVTCollectibles — Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12;
+  --surface: #13161e;
+  --surface2: #1a1e28;
+  --surface3: #222736;
+  --border: #252b3a;
+  --border2: #2e3548;
+  --yellow: #f5c842;
+  --yellow2: #f0b820;
+  --yellow-dim: rgba(245,200,66,.12);
+  --red: #e8394a;
+  --red-dim: rgba(232,57,74,.15);
+  --green: #3de88a;
+  --green-dim: rgba(61,232,138,.12);
+  --blue: #4a9eff;
+  --blue-dim: rgba(74,158,255,.12);
+  --purple: #b06cff;
+  --purple-dim: rgba(176,108,255,.12);
+  --orange: #ff8c42;
+  --orange-dim: rgba(255,140,66,.12);
+  --teal: #2dd4bf;
+  --teal-dim: rgba(45,212,191,.12);
+  --text: #e8eaf2;
+  --text-mid: #8a93aa;
+  --text-dim: #4a5168;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── HEADER ── */
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  height: 54px; display: flex; align-items: center; padding: 0 20px; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px;
+  color: var(--yellow); flex-shrink: 0; line-height: 1;
+}
+.logo span { color: var(--text-dim); font-size: 10px; letter-spacing: 1px; margin-left: 4px; font-family: 'DM Mono', monospace; vertical-align: middle; }
+nav { display: flex; gap: 2px; }
+.nav-btn {
+  background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px;
+  font-weight: 500; color: var(--text-mid); padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.nav-btn:hover { color: var(--text); background: var(--surface2); }
+.nav-btn.active { color: var(--yellow); background: var(--yellow-dim); }
+.header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.sync-status {
+  display: flex; align-items: center; gap: 6px; padding: 4px 12px;
+  border-radius: 16px; font-family: 'DM Mono', monospace; font-size: 11px;
+  border: 1px solid var(--border); background: var(--surface2); cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.sync-status:hover { border-color: var(--teal); }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+.sync-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.sync-dot.syncing { background: var(--yellow); animation: pulse .8s infinite; }
+.sync-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.hstat { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 3px 11px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-mid); white-space: nowrap; }
+.hstat b { color: var(--yellow); }
+
+/* ── MAIN ── */
+main { max-width: 1440px; margin: 0 auto; padding: 20px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── STATS ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 16px; position: relative; overflow: hidden; transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 12px 12px 0 0; }
+.sc-yellow::before { background: var(--yellow); }
+.sc-green::before { background: var(--green); }
+.sc-red::before { background: var(--red); }
+.sc-blue::before { background: var(--blue); }
+.sc-purple::before { background: var(--purple); }
+.sc-orange::before { background: var(--orange); }
+.sc-teal::before { background: var(--teal); }
+.stat-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 1px; line-height: 1; }
+.sv-yellow { color: var(--yellow); } .sv-green { color: var(--green); } .sv-red { color: var(--red); }
+.sv-blue { color: var(--blue); } .sv-purple { color: var(--purple); } .sv-orange { color: var(--orange); } .sv-teal { color: var(--teal); }
+.stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px;
+  color: var(--text-mid); margin-bottom: 12px; margin-top: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── TOOLBAR ── */
+.toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.search-input {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 13px; padding: 8px 12px;
+  border-radius: 8px; outline: none; width: 200px; transition: border-color .15s;
+}
+.search-input:focus { border-color: var(--yellow); }
+.search-input::placeholder { color: var(--text-dim); }
+select.fsel {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 8px 10px;
+  border-radius: 8px; outline: none; cursor: pointer;
+}
+select.fsel:focus { border-color: var(--yellow); }
+
+/* ── BUTTONS ── */
+.btn {
+  border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+  transition: all .15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.btn-primary { background: var(--yellow); color: #0b0d12; }
+.btn-primary:hover { background: var(--yellow2); }
+.btn-ghost { background: var(--surface2); color: var(--text-mid); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid transparent; }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-success { background: var(--green-dim); color: var(--green); border: 1px solid transparent; }
+.btn-success:hover { background: var(--green); color: #0b0d12; }
+.btn-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid transparent; }
+.btn-blue:hover { background: var(--blue); color: #fff; }
+.btn-teal { background: var(--teal-dim); color: var(--teal); border: 1px solid transparent; }
+.btn-teal:hover { background: var(--teal); color: #0b0d12; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-xs { padding: 2px 7px; font-size: 11px; border-radius: 4px; font-weight: 500; }
+
+/* ── TABLE ── */
+.table-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+thead th {
+  background: var(--surface); color: var(--text-dim); font-family: 'DM Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .1em; padding: 10px 12px;
+  text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap;
+  cursor: pointer; user-select: none;
+}
+thead th:hover { color: var(--yellow); }
+thead th.sorted { color: var(--yellow); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr.is-sold { opacity: .4; }
+td { padding: 9px 12px; vertical-align: middle; font-size: 13px; }
+.td-actions { display: flex; gap: 4px; align-items: center; }
+.card-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--yellow); }
+.card-name { font-weight: 600; }
+.card-set { font-size: 11px; color: var(--text-mid); font-family: 'DM Mono', monospace; margin-top: 1px; }
+.card-img-thumb { width: 32px; height: 44px; object-fit: cover; border-radius: 3px; display: block; }
+.no-img { width: 32px; height: 44px; background: var(--surface3); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-dim); }
+
+/* ── BADGES ── */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.badge-holo { background: var(--purple-dim); color: var(--purple); }
+.badge-reverse { background: var(--blue-dim); color: var(--blue); }
+.badge-full-art { background: var(--orange-dim); color: var(--orange); }
+.badge-normal { background: var(--surface3); color: var(--text-mid); }
+.badge-sold { background: var(--red-dim); color: var(--red); }
+.badge-active { background: var(--green-dim); color: var(--green); }
+.cond-nm { color: var(--green); font-weight: 700; }
+.cond-lp { color: #a8e878; }
+.cond-mp { color: var(--yellow); }
+.cond-hp { color: var(--orange); }
+.cond-dmg { color: var(--red); }
+.price-market { font-family: 'DM Mono', monospace; color: var(--green); }
+.price-paid { font-family: 'DM Mono', monospace; color: var(--text-mid); }
+.price-sold { font-family: 'DM Mono', monospace; color: var(--yellow); }
+.profit-p { font-family: 'DM Mono', monospace; color: var(--green); font-weight: 600; }
+.profit-n { font-family: 'DM Mono', monospace; color: var(--red); }
+.profit-u { font-family: 'DM Mono', monospace; color: var(--text-dim); }
+
+/* ── MODALS ── */
+.overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  z-index: 200; align-items: center; justify-content: center; padding: 16px;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 14px;
+  padding: 28px; width: 100%; max-width: 580px; max-height: 92vh; overflow-y: auto;
+  position: relative; animation: modalIn .18s ease-out;
+}
+.modal-sm { max-width: 420px; }
+@keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--yellow); margin-bottom: 20px; }
+.close-btn {
+  position: absolute; top: 14px; right: 14px; background: var(--surface2);
+  border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px;
+  width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.close-btn:hover { color: var(--text); }
+
+/* ── FORMS ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; font-family: 'DM Mono', monospace; }
+.form-input, .form-sel, .form-textarea {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: 13px; padding: 9px 12px;
+  border-radius: 8px; outline: none; width: 100%; transition: border-color .15s;
+}
+.form-input:focus, .form-sel:focus, .form-textarea:focus { border-color: var(--yellow); }
+.form-input::placeholder { color: var(--text-dim); }
+.form-textarea { resize: vertical; min-height: 68px; font-family: 'DM Sans', sans-serif; line-height: 1.5; }
+.form-hint { font-size: 11px; color: var(--text-dim); margin-top: 2px; line-height: 1.5; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 22px; border-top: 1px solid var(--border); padding-top: 18px; }
+
+/* ── LOOKUP ── */
+.lookup-row { display: flex; gap: 8px; align-items: flex-end; }
+.lookup-row .form-group { flex: 1; }
+.lookup-status { padding: 10px 12px; border-radius: 8px; font-size: 12px; margin-top: 8px; display: none; }
+.lookup-status.loading { background: var(--blue-dim); color: var(--blue); display: block; }
+.lookup-status.error { background: var(--red-dim); color: var(--red); display: block; }
+.lookup-status.success { background: var(--green-dim); color: var(--green); display: block; }
+.card-options { display: grid; gap: 8px; margin-top: 10px; max-height: 260px; overflow-y: auto; }
+.card-option {
+  display: flex; gap: 10px; align-items: center; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+  cursor: pointer; transition: all .15s;
+}
+.card-option:hover, .card-option.selected { border-color: var(--yellow); background: var(--yellow-dim); }
+.card-option img { width: 36px; height: 50px; object-fit: cover; border-radius: 3px; background: var(--surface3); }
+.card-option-info .name { font-weight: 600; font-size: 13px; }
+.card-option-info .set { font-size: 11px; color: var(--text-mid); font-family: 'DM Mono', monospace; }
+.card-option-info .rarity { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.card-preview { display: flex; gap: 12px; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+.card-preview img { width: 44px; height: 61px; object-fit: cover; border-radius: 3px; }
+.card-preview-info .name { font-weight: 700; font-size: 14px; }
+.card-preview-info .set { font-size: 11px; color: var(--text-mid); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.card-preview-info .rarity { font-size: 11px; color: var(--purple); margin-top: 2px; }
+.price-fetch-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+.ebay-link { font-size: 11px; color: var(--blue); text-decoration: none; font-family: 'DM Mono', monospace; }
+.ebay-link:hover { text-decoration: underline; }
+
+/* ── PURCHASES ── */
+.purchases-list { display: grid; gap: 10px; }
+.purchase-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; display: grid; grid-template-columns: auto 1fr auto auto;
+  gap: 14px; align-items: center; transition: border-color .15s;
+}
+.purchase-card:hover { border-color: var(--border2); }
+.purchase-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.purchase-icon.bulk { background: var(--blue-dim); }
+.purchase-icon.box { background: var(--yellow-dim); }
+.purchase-icon.pack { background: var(--purple-dim); }
+.purchase-icon.etb { background: var(--orange-dim); }
+.purchase-icon.other { background: var(--surface3); }
+.purchase-info .pname { font-weight: 600; font-size: 14px; }
+.purchase-info .pmeta { font-size: 11px; color: var(--text-mid); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.purchase-info .pnotes { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.purchase-cost { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 1px; color: var(--yellow); }
+.purchase-actions { display: flex; gap: 4px; }
+
+/* ── GOOGLE SHEETS PANEL ── */
+.sheets-panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 22px; margin-bottom: 16px;
+}
+.sheets-panel h3 { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px; color: var(--teal); margin-bottom: 4px; }
+.sheets-panel p { font-size: 13px; color: var(--text-mid); margin-bottom: 16px; line-height: 1.6; }
+.step-list { list-style: none; counter-reset: steps; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+.step-list li { counter-increment: steps; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text-mid); line-height: 1.6; }
+.step-list li::before { content: counter(steps); background: var(--teal-dim); color: var(--teal); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.step-list a { color: var(--yellow); }
+.sheets-creds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.sheet-connected-banner {
+  background: var(--teal-dim); border: 1px solid rgba(45,212,191,.3);
+  border-radius: 10px; padding: 14px 16px; display: flex; gap: 10px;
+  align-items: center; font-size: 13px; margin-bottom: 14px;
+}
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; padding: 64px 24px; color: var(--text-dim); }
+.empty-state .icon { font-size: 52px; margin-bottom: 14px; opacity: .6; }
+.empty-state p { font-size: 15px; margin-bottom: 16px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 20px; right: 20px; background: var(--surface);
+  border: 1px solid var(--border2); border-radius: 10px; padding: 12px 18px;
+  font-size: 13px; color: var(--text); z-index: 999; display: none;
+  align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  animation: toastIn .2s ease-out; max-width: 340px;
+}
+#toast.show { display: flex; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } }
+#toast.success { border-left: 3px solid var(--green); }
+#toast.error { border-left: 3px solid var(--red); }
+#toast.info { border-left: 3px solid var(--blue); }
+#toast.syncing { border-left: 3px solid var(--teal); }
+
+/* ── MISC ── */
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.confirm-msg { font-size: 14px; line-height: 1.6; color: var(--text-mid); margin-bottom: 4px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-full { grid-column: 1; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .header-right .hstat { display: none; }
+  nav .nav-btn { padding: 6px 8px; font-size: 12px; }
+  .purchase-card { grid-template-columns: auto 1fr; }
+  .sheets-creds-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LVTCollectibles <span>INVENTORY</span></div>
+  <nav>
+    <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('cards')">Cards</button>
+    <button class="nav-btn" onclick="showPage('purchases')">Purchases</button>
+    <button class="nav-btn" onclick="showPage('settings')">Settings</button>
+  </nav>
+  <div class="header-right">
+    <div class="sync-status" onclick="showPage('settings')" id="syncStatusBtn" title="Google Sheets sync status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Not connected</span>
+    </div>
+    <div class="hstat" id="hstatCards"><b>0</b> cards</div>
+    <div class="hstat" id="hstatValue"><b>£0</b></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div id="recentSection"></div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="page" id="page-cards">
+    <div class="toolbar">
+      <input type="text" class="search-input" id="cardSearch" placeholder="Search cards…" oninput="renderCards()">
+      <select class="fsel" id="filterVariant" onchange="renderCards()">
+        <option value="">All Variants</option>
+        <option value="normal">Normal</option>
+        <option value="holo">Holo</option>
+        <option value="reverse">Reverse Holo</option>
+        <option value="full-art">Full Art</option>
+        <option value="ex">ex / EX</option>
+        <option value="secret">Secret Rare</option>
+        <option value="promo">Promo</option>
+      </select>
+      <select class="fsel" id="filterCondition" onchange="renderCards()">
+        <option value="">All Conditions</option>
+        <option value="NM">Near Mint</option>
+        <option value="LP">Light Play</option>
+        <option value="MP">Moderate Play</option>
+        <option value="HP">Heavy Play</option>
+        <option value="DMG">Damaged</option>
+      </select>
+      <select class="fsel" id="filterStatus" onchange="renderCards()">
+        <option value="">All Status</option>
+        <option value="active">In Stock</option>
+        <option value="sold">Sold</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="manualSync()" id="syncNowBtn" title="Sync to Google Sheets now">⟳ Sync</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddCard()" style="margin-left:auto">+ Add Card</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px"></th>
+            <th onclick="sortBy('number')" id="th-number">Card#</th>
+            <th onclick="sortBy('name')" id="th-name">Name</th>
+            <th onclick="sortBy('setName')" id="th-setName">Set</th>
+            <th>Variant</th>
+            <th onclick="sortBy('condition')" id="th-condition">Cond</th>
+            <th onclick="sortBy('marketPrice')" id="th-marketPrice">Market £</th>
+            <th onclick="sortBy('pricePaid')" id="th-pricePaid">Paid £</th>
+            <th onclick="sortBy('salePrice')" id="th-salePrice">Sale £</th>
+            <th>Profit</th>
+            <th>Status</th>
+            <th style="min-width:126px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cardsBody"></tbody>
+      </table>
+    </div>
+    <div id="cardsEmpty" class="empty-state" style="display:none">
+      <div class="icon">🃏</div>
+      <p>No cards yet. Add your first card!</p>
+      <button class="btn btn-primary" onclick="openAddCard()">+ Add Card</button>
+    </div>
+    <div id="cardCount" style="margin-top:10px;font-size:12px;color:var(--text-dim);font-family:'DM Mono',monospace;"></div>
+  </div>
+
+  <!-- PURCHASES -->
+  <div class="page" id="page-purchases">
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="openAddPurchase()">+ Log Purchase</button>
+      <span id="purchaseTotal" style="margin-left:auto;font-size:12px;color:var(--text-dim);font-family:'DM Mono',monospace;"></span>
+    </div>
+    <div class="purchases-list" id="purchasesList"></div>
+    <div id="purchasesEmpty" class="empty-state" style="display:none">
+      <div class="icon">📦</div>
+      <p>No purchases logged yet.</p>
+      <button class="btn btn-primary" onclick="openAddPurchase()">+ Log Purchase</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div style="max-width:640px;display:flex;flex-direction:column;gap:0">
+
+      <!-- GOOGLE SHEETS SECTION -->
+      <div class="section-title">Google Sheets Sync</div>
+      <div class="sheets-panel">
+        <h3>🔗 Connect to Google Sheets</h3>
+        <p>Your inventory will be saved to a Google Sheet you own. Data syncs automatically on every save. You'll need a free Google Cloud API key + OAuth Client ID (one-time setup, ~5 min).</p>
+
+        <div id="sheetConnectedBanner" style="display:none" class="sheet-connected-banner">
+          <span style="font-size:18px">✅</span>
+          <div>
+            <strong style="color:var(--teal)">Connected to Google Sheets</strong><br>
+            <span style="color:var(--text-mid);font-size:12px;font-family:'DM Mono',monospace" id="connectedSheetId"></span>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="disconnectSheets()" style="margin-left:auto">Disconnect</button>
+        </div>
+
+        <ol class="step-list">
+          <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> → create a project → enable <strong>Google Sheets API</strong></li>
+          <li>Go to <strong>APIs &amp; Services → Credentials</strong> → Create <strong>API Key</strong> → copy it below</li>
+          <li>Create an <strong>OAuth 2.0 Client ID</strong> (type: Web Application). Add your file's URL (or <code style="color:var(--yellow)">http://localhost</code> for local use) as an Authorised JavaScript Origin</li>
+          <li>Create a blank Google Sheet. Copy its ID from the URL: <code style="color:var(--yellow)">…/spreadsheets/d/<strong style="color:var(--green)">THIS_PART</strong>/edit</code></li>
+          <li>Paste all three values below and click <strong>Connect &amp; Authorise</strong></li>
+        </ol>
+
+        <div class="sheets-creds-grid">
+          <div class="form-group">
+            <label class="form-label">Google API Key</label>
+            <input type="password" class="form-input" id="gsApiKey" placeholder="AIzaSy…">
+            <div class="form-hint">Restricts to Sheets API in Cloud Console</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">OAuth Client ID</label>
+            <input type="text" class="form-input" id="gsClientId" placeholder="123….apps.googleusercontent.com">
+          </div>
+          <div class="form-group form-full" style="grid-column:1/-1">
+            <label class="form-label">Google Sheet ID</label>
+            <input type="text" class="form-input" id="gsSheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+            <div class="form-hint">Found in the spreadsheet URL between /d/ and /edit</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-teal" onclick="connectSheets()">🔗 Connect &amp; Authorise</button>
+          <button class="btn btn-ghost btn-sm" onclick="manualSync()" id="manualSyncBtn">⟳ Sync Now</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadFromSheets()" id="loadFromSheetsBtn">⬇ Load from Sheet</button>
+        </div>
+        <div id="sheetsStatus" style="margin-top:12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text-mid)"></div>
+      </div>
+
+      <!-- POKEMONTCG API -->
+      <div class="section-title">PokémonTCG API</div>
+      <div class="sheets-panel">
+        <h3>🃏 Card Lookup</h3>
+        <p>Free key at <a href="https://dev.pokemontcg.io" target="_blank" style="color:var(--yellow)">dev.pokemontcg.io</a> — 20,000 lookups/day (vs 1,000/day without key)</p>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">PokémonTCG API Key</label>
+          <input type="text" class="form-input" id="apiKeyInput" placeholder="Paste your key here…">
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Currency</label>
+          <select class="form-sel" id="currencyInput">
+            <option value="GBP">£ GBP</option>
+            <option value="EUR">€ EUR</option>
+            <option value="USD">$ USD</option>
+          </select>
+          <div class="form-hint">Cardmarket EUR prices are converted. GBP ≈ EUR × 0.855</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+      <!-- DATA MANAGEMENT -->
+      <div class="section-title">Data Management</div>
+      <div class="sheets-panel">
+        <h3>💾 Local Backup</h3>
+        <p>Data lives in your browser's localStorage and syncs to Google Sheets if connected. Export JSON backups regularly.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export JSON</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">🗑 Clear All</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- ADD/EDIT CARD -->
+<div class="overlay" id="cardModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('cardModal')">✕</button>
+    <div class="modal-title" id="cardModalTitle">ADD CARD</div>
+    <div class="form-grid">
+      <div class="form-full">
+        <div class="form-label" style="margin-bottom:5px">Card Lookup via PokémonTCG API</div>
+        <div class="lookup-row">
+          <div class="form-group"><label class="form-label">Set Code</label><input type="text" class="form-input" id="fSetCode" placeholder="e.g. sv3, swsh1, base1" oninput="this.value=this.value.toLowerCase()"></div>
+          <div class="form-group"><label class="form-label">Card Number</label><input type="text" class="form-input" id="fCardNum" placeholder="e.g. 45"></div>
+          <button class="btn btn-blue btn-sm" onclick="lookupCard()" style="align-self:flex-end;flex-shrink:0">🔍 Lookup</button>
+        </div>
+        <div class="form-hint" style="margin-top:4px">Enter set code + number → auto-fills name, set, rarity, and market price</div>
+        <div id="lookupStatus" class="lookup-status"></div>
+        <div id="cardOptions" class="card-options" style="display:none"></div>
+        <div id="cardPreview" style="display:none"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Card Name *</label><input type="text" class="form-input" id="fName" placeholder="Charizard ex"></div>
+      <div class="form-group"><label class="form-label">Set Name</label><input type="text" class="form-input" id="fSetName" placeholder="Obsidian Flames"></div>
+      <div class="form-group"><label class="form-label">Rarity</label><input type="text" class="form-input" id="fRarity" placeholder="Ultra Rare"></div>
+      <div class="form-group">
+        <label class="form-label">Variant</label>
+        <select class="form-sel" id="fVariant">
+          <option value="normal">Normal</option><option value="holo">Holo</option>
+          <option value="reverse">Reverse Holo</option><option value="full-art">Full Art</option>
+          <option value="ex">ex / EX</option><option value="secret">Secret Rare</option><option value="promo">Promo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condition</label>
+        <select class="form-sel" id="fCondition">
+          <option value="NM">Near Mint (NM)</option><option value="LP">Light Play (LP)</option>
+          <option value="MP">Moderate Play (MP)</option><option value="HP">Heavy Play (HP)</option>
+          <option value="DMG">Damaged (DMG)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Market Price (£)</label>
+        <input type="number" class="form-input" id="fMarketPrice" placeholder="0.00" step="0.01" min="0">
+        <div class="form-hint">Auto-filled from Cardmarket (EUR → GBP) via lookup</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price Paid (£)</label>
+        <input type="number" class="form-input" id="fPricePaid" placeholder="Leave blank if unknown" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bulk Buy Ref</label>
+        <select class="form-sel" id="fBulkRef"><option value="">None / Individual</option></select>
+        <div class="form-hint">Link to a logged purchase</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sale Price (£)</label>
+        <input type="number" class="form-input" id="fSalePrice" placeholder="When sold" step="0.01" min="0">
+      </div>
+      <div class="form-full">
+        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="fNotes" placeholder="Any extra notes…"></textarea></div>
+      </div>
+      <div class="form-full" id="soldRow" style="display:none">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="fSold" style="width:16px;height:16px;accent-color:var(--red)"> Mark as Sold
+        </label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('cardModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PURCHASE -->
+<div class="overlay" id="purchaseModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('purchaseModal')">✕</button>
+    <div class="modal-title" id="purchaseModalTitle">LOG PURCHASE</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-sel" id="pType">
+          <option value="bulk">Bulk Buy</option><option value="box">Booster Box</option>
+          <option value="pack">Booster Pack(s)</option><option value="etb">Elite Trainer Box</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Name / Description *</label><input type="text" class="form-input" id="pName" placeholder="e.g. Scarlet & Violet ETB"></div>
+      <div class="form-group"><label class="form-label">Total Cost (£) *</label><input type="number" class="form-input" id="pCost" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="pDate"></div>
+      <div class="form-group"><label class="form-label">Card Count (approx)</label><input type="number" class="form-input" id="pCardCount" placeholder="e.g. 200" min="0"></div>
+      <div class="form-group"><label class="form-label">Seller / Source</label><input type="text" class="form-input" id="pSeller" placeholder="eBay, local shop…"></div>
+      <div class="form-full"><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="pNotes"></textarea></div></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('purchaseModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button>
+    </div>
+  </div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="overlay" id="sellModal">
+  <div class="modal modal-sm">
+    <button class="close-btn" onclick="closeModal('sellModal')">✕</button>
+    <div class="modal-title">MARK AS SOLD</div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label class="form-label">Sale Price (£)</label>
+      <input type="number" class="form-input" id="sSalePrice" placeholder="0.00" step="0.01" min="0">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('sellModal')">Cancel</button>
+      <button class="btn btn-success" onclick="confirmSell()">✓ Mark Sold</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="overlay" id="confirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-title" id="confirmTitle">CONFIRM</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon"></span><span id="toastMsg"></span></div>
+
+<!-- Google APIs -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let cards = [], purchases = [];
+let settings = { apiKey: '', currency: 'GBP', gsApiKey: '', gsClientId: '', gsSheetId: '' };
+let sortField = 'name', sortAsc = true;
+let editingCardId = null, editingPurchaseId = null, sellTargetId = null;
+let confirmCallback = null;
+const EUR_GBP = 0.855;
+
+// Google API state
+let gapiInited = false, gisInited = false, gsAccessToken = null;
+let syncPending = false, isSyncing = false;
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTENCE — localStorage
+// ═══════════════════════════════════════════════════════════
+function load() {
+  try { cards = JSON.parse(localStorage.getItem('lvt_cards') || '[]'); } catch(e) { cards = []; }
+  try { purchases = JSON.parse(localStorage.getItem('lvt_purchases') || '[]'); } catch(e) { purchases = []; }
+  try { settings = { ...settings, ...JSON.parse(localStorage.getItem('lvt_settings') || '{}') }; } catch(e) {}
+}
+function saveLocal() {
+  localStorage.setItem('lvt_cards', JSON.stringify(cards));
+  localStorage.setItem('lvt_purchases', JSON.stringify(purchases));
+  localStorage.setItem('lvt_settings', JSON.stringify(settings));
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ═══════════════════════════════════════════════════════════
+// CURRENCY
+// ═══════════════════════════════════════════════════════════
+function sym() { return settings.currency === 'EUR' ? '€' : settings.currency === 'USD' ? '$' : '£'; }
+function fromEUR(v) {
+  if (!v) return null;
+  if (settings.currency === 'EUR') return v;
+  if (settings.currency === 'GBP') return v * EUR_GBP;
+  return v * 1.08;
+}
+function fmt(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  return sym() + Number(v).toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  const map = { dashboard: 0, cards: 1, purchases: 2, settings: 3 };
+  document.querySelectorAll('.nav-btn')[map[p]]?.classList.add('active');
+  if (p === 'dashboard') renderDashboard();
+  if (p === 'cards') renderCards();
+  if (p === 'purchases') renderPurchases();
+  if (p === 'settings') loadSettingsUI();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard() {
+  const active = cards.filter(c => !c.sold);
+  const sold = cards.filter(c => c.sold);
+  const tMarket = active.reduce((s, c) => s + (c.marketPrice || 0), 0);
+  const tPaid = cards.filter(c => c.pricePaid).reduce((s, c) => s + (c.pricePaid || 0), 0);
+  const tRevenue = sold.filter(c => c.salePrice).reduce((s, c) => s + (c.salePrice || 0), 0);
+  const tPurchases = purchases.reduce((s, p) => s + (p.cost || 0), 0);
+  const profit = tRevenue - tPaid;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card sc-yellow"><div class="stat-label">Total Cards</div><div class="stat-value sv-yellow">${cards.length}</div><div class="stat-sub">${active.length} stock · ${sold.length} sold</div></div>
+    <div class="stat-card sc-green"><div class="stat-label">Collection Value</div><div class="stat-value sv-green">${sym()}${tMarket.toFixed(2)}</div><div class="stat-sub">Cardmarket prices</div></div>
+    <div class="stat-card sc-blue"><div class="stat-label">Amount Invested</div><div class="stat-value sv-blue">${sym()}${tPaid.toFixed(2)}</div><div class="stat-sub">tracked cards only</div></div>
+    <div class="stat-card sc-orange"><div class="stat-label">Purchase Costs</div><div class="stat-value sv-orange">${sym()}${tPurchases.toFixed(2)}</div><div class="stat-sub">${purchases.length} purchase${purchases.length!==1?'s':''}</div></div>
+    <div class="stat-card ${profit>=0?'sc-green':'sc-red'}"><div class="stat-label">Sales Profit</div><div class="stat-value ${profit>=0?'sv-green':'sv-red'}">${sym()}${Math.abs(profit).toFixed(2)}</div><div class="stat-sub">${profit>=0?'profit':'loss'} · ${sym()}${tRevenue.toFixed(2)} revenue</div></div>
+    <div class="stat-card sc-purple"><div class="stat-label">Cards Sold</div><div class="stat-value sv-purple">${sold.length}</div><div class="stat-sub">of ${cards.length} total</div></div>
+  `;
+  document.getElementById('hstatCards').innerHTML = `<b>${cards.length}</b> cards`;
+  document.getElementById('hstatValue').innerHTML = `<b>${sym()}${tMarket.toFixed(0)}</b>`;
+  const recent = [...cards].sort((a,b) => (b.addedAt||0)-(a.addedAt||0)).slice(0,5);
+  if (recent.length) {
+    document.getElementById('recentSection').innerHTML = `<div class="section-title">Recently Added</div>
+      <div class="table-wrap"><table><thead><tr><th></th><th>Card#</th><th>Name</th><th>Set</th><th>Variant</th><th>Cond</th><th>Market</th><th>Paid</th></tr></thead>
+      <tbody>${recent.map(c => cardRow(c, true)).join('')}</tbody></table></div>`;
+  } else {
+    document.getElementById('recentSection').innerHTML = `<div class="empty-state"><div class="icon">✨</div><p>Add your first card to get started!</p><button class="btn btn-primary" onclick="showPage('cards');openAddCard()">+ Add Card</button></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CARDS TABLE
+// ═══════════════════════════════════════════════════════════
+function sortBy(f) {
+  if (sortField === f) sortAsc = !sortAsc; else { sortField = f; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted'));
+  const th = document.getElementById('th-' + f);
+  if (th) th.classList.add('sorted');
+  renderCards();
+}
+function filteredCards() {
+  const q = document.getElementById('cardSearch').value.toLowerCase();
+  const fv = document.getElementById('filterVariant').value;
+  const fc = document.getElementById('filterCondition').value;
+  const fs = document.getElementById('filterStatus').value;
+  return cards.filter(c => {
+    if (q && !`${c.name}${c.setName}${c.number}${c.rarity}`.toLowerCase().includes(q)) return false;
+    if (fv && c.variant !== fv) return false;
+    if (fc && c.condition !== fc) return false;
+    if (fs === 'active' && c.sold) return false;
+    if (fs === 'sold' && !c.sold) return false;
+    return true;
+  }).sort((a,b) => {
+    let va = a[sortField]??'', vb = b[sortField]??'';
+    if (typeof va==='string') va = va.toLowerCase();
+    if (typeof vb==='string') vb = vb.toLowerCase();
+    return va<vb ? (sortAsc?-1:1) : va>vb ? (sortAsc?1:-1) : 0;
+  });
+}
+function renderCards() {
+  const list = filteredCards();
+  const tbody = document.getElementById('cardsBody');
+  const empty = document.getElementById('cardsEmpty');
+  if (!cards.length) { tbody.innerHTML=''; empty.style.display='block'; document.getElementById('cardCount').textContent=''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(c => cardRow(c)).join('');
+  document.getElementById('cardCount').textContent = `Showing ${list.length} of ${cards.length} cards`;
+}
+function varBadge(v) {
+  const map = { holo:'badge-holo', reverse:'badge-reverse', 'full-art':'badge-full-art', ex:'badge-full-art', secret:'badge-holo', promo:'badge-normal', normal:'badge-normal' };
+  const labels = { holo:'Holo', reverse:'Reverse', 'full-art':'Full Art', ex:'ex/EX', secret:'Secret', promo:'Promo', normal:'Normal' };
+  return `<span class="badge ${map[v]||'badge-normal'}">${labels[v]||v}</span>`;
+}
+function cardRow(c, minimal=false) {
+  const condClass = {NM:'cond-nm',LP:'cond-lp',MP:'cond-mp',HP:'cond-hp',DMG:'cond-dmg'}[c.condition]||'';
+  const profit = c.sold && c.salePrice!==undefined ? (c.salePrice||0)-(c.pricePaid||0) : null;
+  const profitHtml = profit!==null ? `<span class="${profit>=0?'profit-p':'profit-n'}">${profit>=0?'+':''}${sym()}${profit.toFixed(2)}</span>` : '<span class="profit-u">—</span>';
+  const img = c.imageSmall ? `<img class="card-img-thumb" src="${c.imageSmall}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<div class="no-img">🃏</div>';
+  if (minimal) return `<tr class="${c.sold?'is-sold':''}"><td>${img}</td><td><span class="card-num">${c.setCode?c.setCode+'-':''}${c.number||'—'}</span></td><td><div class="card-name">${c.name||'—'}</div></td><td><div class="card-set">${c.setName||'—'}</div></td><td>${varBadge(c.variant||'normal')}</td><td><span class="${condClass}">${c.condition||'—'}</span></td><td><span class="price-market">${fmt(c.marketPrice)}</span></td><td><span class="price-paid">${fmt(c.pricePaid)}</span></td></tr>`;
+  return `<tr class="${c.sold?'is-sold':''}">
+    <td>${img}</td>
+    <td><span class="card-num">${c.setCode?c.setCode+'-':''}${c.number||'—'}</span></td>
+    <td><div class="card-name">${c.name||'—'}</div>${c.rarity?`<div class="card-set">${c.rarity}</div>`:''}</td>
+    <td><div class="card-set">${c.setName||'—'}</div></td>
+    <td>${varBadge(c.variant||'normal')}</td>
+    <td><span class="${condClass}">${c.condition||'—'}</span></td>
+    <td><span class="price-market">${fmt(c.marketPrice)}</span></td>
+    <td><span class="price-paid">${fmt(c.pricePaid)}</span></td>
+    <td><span class="price-sold">${fmt(c.salePrice)}</span></td>
+    <td>${profitHtml}</td>
+    <td>${c.sold?'<span class="badge badge-sold">Sold</span>':'<span class="badge badge-active">Stock</span>'}</td>
+    <td><div class="td-actions">
+      ${!c.sold?`<button class="btn btn-success btn-xs" onclick="openSell('${c.id}')">Sell</button>`:''}
+      <button class="btn btn-ghost btn-xs" onclick="openEditCard('${c.id}')">Edit</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteCard('${c.id}')">✕</button>
+    </div></td>
+  </tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CARD LOOKUP
+// ═══════════════════════════════════════════════════════════
+async function lookupCard() {
+  const setCode = document.getElementById('fSetCode').value.trim();
+  const num = document.getElementById('fCardNum').value.trim();
+  const status = document.getElementById('lookupStatus');
+  const optDiv = document.getElementById('cardOptions');
+  const prevDiv = document.getElementById('cardPreview');
+  if (!setCode && !num) { showLS('error','Enter a set code and/or card number'); return; }
+  showLS('loading','<span class="spinner"></span>Searching PokémonTCG database…');
+  optDiv.style.display = 'none'; prevDiv.style.display = 'none';
+  try {
+    let q = setCode && num ? `number:${num} set.id:${setCode}` : setCode ? `set.id:${setCode}` : `number:${num}`;
+    const headers = {};
+    if (settings.apiKey) headers['X-Api-Key'] = settings.apiKey;
+    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=12`, { headers });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const results = data.data || [];
+    if (!results.length) { showLS('error','No cards found. Try different set code / number.'); return; }
+    if (results.length === 1) { applyCard(results[0]); }
+    else {
+      showLS('success', `Found ${results.length} cards — select the correct one:`);
+      optDiv.style.display = 'grid';
+      optDiv.innerHTML = results.map(c => {
+        const price = extractPrice(c);
+        return `<div class="card-option" onclick='applyCardFromJSON(${JSON.stringify(JSON.stringify(c))})'>
+          <img src="${c.images?.small||''}" alt="" onerror="this.style.display='none'">
+          <div class="card-option-info">
+            <div class="name">${c.name}</div>
+            <div class="set">${c.set?.name||''} · #${c.number}</div>
+            <div class="rarity">${c.rarity||''} ${price?'· <span style="color:var(--green)">'+sym()+price.toFixed(2)+'</span>':''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } catch(e) { showLS('error','Lookup failed: ' + e.message); }
+}
+function applyCardFromJSON(str) { applyCard(JSON.parse(str)); }
+function showLS(type, msg) { const el = document.getElementById('lookupStatus'); el.className='lookup-status '+type; el.innerHTML=msg; }
+function extractPrice(card) {
+  const cm = card.cardmarket?.prices;
+  if (cm) { const eur = cm.averageSellPrice||cm.trendPrice||cm.avg30; if (eur) return fromEUR(eur); }
+  const tcp = card.tcgplayer?.prices;
+  if (tcp) { for (const v of ['holofoil','reverseHolofoil','normal','1stEditionHolofoil']) { if (tcp[v]?.market) return tcp[v].market * 0.79; } }
+  return null;
+}
+function applyCard(card) {
+  document.getElementById('fName').value = card.name||'';
+  document.getElementById('fSetName').value = card.set?.name||'';
+  document.getElementById('fSetCode').value = card.set?.id||'';
+  document.getElementById('fCardNum').value = card.number||'';
+  document.getElementById('fRarity').value = card.rarity||'';
+  const r = (card.rarity||'').toLowerCase();
+  let variant = 'normal';
+  if (r.includes('reverse')) variant='reverse';
+  else if (r.includes('full art')||r.includes('special')) variant='full-art';
+  else if (r.includes('secret')||r.includes('rainbow')) variant='secret';
+  else if (r.includes(' ex')||r.includes('vmax')||r.includes('vstar')) variant='ex';
+  else if (r.includes('holo')) variant='holo';
+  document.getElementById('fVariant').value = variant;
+  const price = extractPrice(card);
+  if (price) document.getElementById('fMarketPrice').value = price.toFixed(2);
+  const eName = `${card.name} ${card.set?.name||''} ${card.rarity||''}`.trim();
+  const ebayUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(eName+' pokemon card')}&LH_Sold=1&LH_Complete=1&_sacat=2536`;
+  const prev = document.getElementById('cardPreview');
+  prev.style.display = 'flex';
+  prev.className = 'card-preview';
+  prev.innerHTML = `
+    <img src="${card.images?.small||''}" alt="" style="width:44px;height:61px;object-fit:cover;border-radius:3px;background:var(--surface3)" onerror="this.style.display='none'">
+    <div class="card-preview-info" style="flex:1">
+      <div class="name">${card.name}</div>
+      <div class="set">${card.set?.name||''} · #${card.number}</div>
+      <div class="rarity">${card.rarity||''}</div>
+      <div class="price-fetch-row">
+        ${price ? `<span style="font-family:'DM Mono',monospace;font-size:12px"><span style="color:var(--text-dim)">Market: </span><span style="color:var(--green);font-weight:600">${sym()}${price.toFixed(2)}</span></span>` : '<span style="color:var(--text-dim);font-size:11px">No price found</span>'}
+        <a href="${ebayUrl}" target="_blank" class="ebay-link">eBay UK sold →</a>
+      </div>
+    </div>`;
+  prev.dataset.imageSmall = card.images?.small||'';
+  prev.dataset.imageLarge = card.images?.large||'';
+  prev.dataset.tcgId = card.id||'';
+  document.getElementById('cardOptions').style.display = 'none';
+  showLS('success', `✓ ${card.name} — ${card.set?.name}`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADD / EDIT CARD
+// ═══════════════════════════════════════════════════════════
+function openAddCard() {
+  editingCardId = null;
+  document.getElementById('cardModalTitle').textContent = 'ADD CARD';
+  document.getElementById('soldRow').style.display = 'none';
+  clearCardForm(); populateBulkRefs();
+  openModal('cardModal');
+}
+function openEditCard(id) {
+  editingCardId = id;
+  const c = cards.find(x => x.id===id); if (!c) return;
+  document.getElementById('cardModalTitle').textContent = 'EDIT CARD';
+  document.getElementById('soldRow').style.display = 'block';
+  clearCardForm(); populateBulkRefs();
+  document.getElementById('fSetCode').value = c.setCode||'';
+  document.getElementById('fCardNum').value = c.number||'';
+  document.getElementById('fName').value = c.name||'';
+  document.getElementById('fSetName').value = c.setName||'';
+  document.getElementById('fRarity').value = c.rarity||'';
+  document.getElementById('fVariant').value = c.variant||'normal';
+  document.getElementById('fCondition').value = c.condition||'NM';
+  document.getElementById('fMarketPrice').value = c.marketPrice||'';
+  document.getElementById('fPricePaid').value = c.pricePaid||'';
+  document.getElementById('fSalePrice').value = c.salePrice||'';
+  document.getElementById('fBulkRef').value = c.bulkRef||'';
+  document.getElementById('fNotes').value = c.notes||'';
+  document.getElementById('fSold').checked = c.sold||false;
+  if (c.imageSmall) {
+    const prev = document.getElementById('cardPreview');
+    const ebayUrl = `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(c.name+' '+(c.setName||'')+' pokemon card')}&LH_Sold=1&LH_Complete=1&_sacat=2536`;
+    prev.style.display = 'flex'; prev.className = 'card-preview';
+    prev.innerHTML = `<img src="${c.imageSmall}" alt="" style="width:44px;height:61px;object-fit:cover;border-radius:3px" onerror="this.style.display='none'"><div class="card-preview-info" style="flex:1"><div class="name">${c.name}</div><div class="set">${c.setName||''} · #${c.number||''}</div><div class="price-fetch-row"><a href="${ebayUrl}" target="_blank" class="ebay-link">eBay UK sold →</a></div></div>`;
+    prev.dataset.imageSmall = c.imageSmall; prev.dataset.imageLarge = c.imageLarge||''; prev.dataset.tcgId = c.tcgId||'';
+  }
+  openModal('cardModal');
+}
+function clearCardForm() {
+  ['fSetCode','fCardNum','fName','fSetName','fRarity','fMarketPrice','fPricePaid','fSalePrice','fNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fVariant').value='normal'; document.getElementById('fCondition').value='NM'; document.getElementById('fSold').checked=false;
+  document.getElementById('lookupStatus').className='lookup-status'; document.getElementById('lookupStatus').innerHTML='';
+  document.getElementById('cardOptions').style.display='none'; document.getElementById('cardPreview').style.display='none';
+  document.getElementById('cardPreview').innerHTML='';
+}
+function populateBulkRefs() {
+  const sel = document.getElementById('fBulkRef');
+  sel.innerHTML = '<option value="">None / Individual</option>';
+  purchases.forEach(p => { const o=document.createElement('option'); o.value=p.id; o.textContent=`${p.name} (${sym()}${(p.cost||0).toFixed(2)})`; sel.appendChild(o); });
+}
+function saveCard() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { showToast('error','Card name is required'); return; }
+  const prev = document.getElementById('cardPreview');
+  const orig = editingCardId ? cards.find(c=>c.id===editingCardId) : {};
+  const card = {
+    id: editingCardId||uid(), addedAt: orig?.addedAt||Date.now(),
+    setCode: document.getElementById('fSetCode').value.trim().toLowerCase(),
+    number: document.getElementById('fCardNum').value.trim(), name,
+    setName: document.getElementById('fSetName').value.trim(), rarity: document.getElementById('fRarity').value.trim(),
+    variant: document.getElementById('fVariant').value, condition: document.getElementById('fCondition').value,
+    marketPrice: parseFloat(document.getElementById('fMarketPrice').value)||null,
+    pricePaid: parseFloat(document.getElementById('fPricePaid').value)||null,
+    salePrice: parseFloat(document.getElementById('fSalePrice').value)||null,
+    bulkRef: document.getElementById('fBulkRef').value||null, notes: document.getElementById('fNotes').value.trim(),
+    sold: document.getElementById('fSold').checked,
+    imageSmall: prev.dataset?.imageSmall||orig?.imageSmall||'',
+    imageLarge: prev.dataset?.imageLarge||orig?.imageLarge||'',
+    tcgId: prev.dataset?.tcgId||orig?.tcgId||'',
+  };
+  if (editingCardId) { const i=cards.findIndex(c=>c.id===editingCardId); cards[i]=card; }
+  else cards.push(card);
+  saveLocal(); queueSync();
+  closeModal('cardModal'); renderCards(); renderDashboard();
+  showToast('success', editingCardId?'Card updated':'Card added!');
+}
+function deleteCard(id) {
+  showConfirm('Delete Card','Delete this card? This cannot be undone.',()=>{
+    cards=cards.filter(c=>c.id!==id); saveLocal(); queueSync(); renderCards(); renderDashboard();
+    showToast('success','Card deleted');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SELL
+// ═══════════════════════════════════════════════════════════
+function openSell(id) { sellTargetId=id; const c=cards.find(x=>x.id===id); document.getElementById('sSalePrice').value=c?.salePrice||''; openModal('sellModal'); }
+function confirmSell() {
+  const price=parseFloat(document.getElementById('sSalePrice').value);
+  const c=cards.find(x=>x.id===sellTargetId); if(!c) return;
+  c.sold=true; if(!isNaN(price)) c.salePrice=price;
+  saveLocal(); queueSync(); closeModal('sellModal'); renderCards(); renderDashboard();
+  showToast('success',`${c.name} marked as sold`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PURCHASES
+// ═══════════════════════════════════════════════════════════
+function renderPurchases() {
+  const list=document.getElementById('purchasesList'); const empty=document.getElementById('purchasesEmpty');
+  const total=purchases.reduce((s,p)=>s+(p.cost||0),0);
+  document.getElementById('purchaseTotal').textContent=`Total spent: ${sym()}${total.toFixed(2)}`;
+  if (!purchases.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const icons={bulk:'📦',box:'🗃️',pack:'🃏',etb:'🎁',other:'💳'};
+  list.innerHTML=purchases.map(p=>`<div class="purchase-card">
+    <div class="purchase-icon ${p.type||'other'}">${icons[p.type]||'💳'}</div>
+    <div class="purchase-info"><div class="pname">${p.name}</div><div class="pmeta">${(p.type||'other').toUpperCase()} · ${p.date||'No date'} ${p.seller?'· '+p.seller:''} ${p.cardCount?'· ~'+p.cardCount+' cards':''}</div>${p.notes?`<div class="pnotes">${p.notes}</div>`:''}</div>
+    <div class="purchase-cost">${sym()}${(p.cost||0).toFixed(2)}</div>
+    <div class="purchase-actions"><button class="btn btn-ghost btn-sm" onclick="editPurchase('${p.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deletePurchase('${p.id}')">✕</button></div>
+  </div>`).join('');
+}
+function openAddPurchase() {
+  editingPurchaseId=null; document.getElementById('purchaseModalTitle').textContent='LOG PURCHASE';
+  ['pName','pCost','pCardCount','pSeller','pNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pType').value='bulk'; document.getElementById('pDate').value=new Date().toISOString().slice(0,10);
+  openModal('purchaseModal');
+}
+function editPurchase(id) {
+  editingPurchaseId=id; const p=purchases.find(x=>x.id===id); if(!p) return;
+  document.getElementById('purchaseModalTitle').textContent='EDIT PURCHASE';
+  document.getElementById('pType').value=p.type||'bulk'; document.getElementById('pName').value=p.name||'';
+  document.getElementById('pCost').value=p.cost||''; document.getElementById('pDate').value=p.date||'';
+  document.getElementById('pCardCount').value=p.cardCount||''; document.getElementById('pSeller').value=p.seller||'';
+  document.getElementById('pNotes').value=p.notes||''; openModal('purchaseModal');
+}
+function savePurchase() {
+  const name=document.getElementById('pName').value.trim(); const cost=parseFloat(document.getElementById('pCost').value);
+  if (!name) { showToast('error','Name is required'); return; }
+  if (isNaN(cost)||cost<0) { showToast('error','Valid cost required'); return; }
+  const p={ id:editingPurchaseId||uid(), type:document.getElementById('pType').value, name, cost,
+    date:document.getElementById('pDate').value, cardCount:parseInt(document.getElementById('pCardCount').value)||null,
+    seller:document.getElementById('pSeller').value.trim(), notes:document.getElementById('pNotes').value.trim() };
+  if (editingPurchaseId) { const i=purchases.findIndex(x=>x.id===editingPurchaseId); purchases[i]=p; }
+  else purchases.push(p);
+  saveLocal(); queueSync(); closeModal('purchaseModal'); renderPurchases(); renderDashboard();
+  showToast('success',editingPurchaseId?'Purchase updated':'Purchase logged!');
+}
+function deletePurchase(id) {
+  showConfirm('Delete Purchase','Delete this purchase?',()=>{
+    purchases=purchases.filter(p=>p.id!==id); saveLocal(); queueSync(); renderPurchases(); renderDashboard();
+    showToast('success','Purchase deleted');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// GOOGLE SHEETS INTEGRATION
+// ═══════════════════════════════════════════════════════════
+// Sheet layout:
+//   Sheet "Cards" — one row per card, columns = card fields
+//   Sheet "Purchases" — one row per purchase
+//   Sheet "Meta" — A1=lastSync timestamp
+
+const CARD_HEADERS = ['id','setCode','number','name','setName','rarity','variant','condition','marketPrice','pricePaid','salePrice','sold','bulkRef','notes','addedAt','imageSmall','imageLarge','tcgId'];
+const PURCH_HEADERS = ['id','type','name','cost','date','cardCount','seller','notes'];
+
+function gapiLoaded() { gapi.load('client', initGapiClient); }
+async function initGapiClient() {
+  if (!settings.gsApiKey || !settings.gsClientId) return;
+  try {
+    await gapi.client.init({ apiKey: settings.gsApiKey, discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'] });
+    gapiInited = true;
+    maybeRestoreToken();
+  } catch(e) { console.warn('GAPI init failed:', e); }
+}
+function gisLoaded() { gisInited = true; }
+function maybeRestoreToken() {
+  const stored = sessionStorage.getItem('lvt_gs_token');
+  if (stored) { gsAccessToken = stored; gapi.client.setToken({ access_token: stored }); updateSyncStatus('connected'); }
+}
+
+function connectSheets() {
+  const apiKey = document.getElementById('gsApiKey').value.trim();
+  const clientId = document.getElementById('gsClientId').value.trim();
+  const sheetId = document.getElementById('gsSheetId').value.trim();
+  if (!apiKey || !clientId || !sheetId) { showToast('error','Fill in all three fields'); return; }
+  settings.gsApiKey = apiKey; settings.gsClientId = clientId; settings.gsSheetId = sheetId;
+  saveLocal();
+  setSheetsStatus('info','Initialising Google API…');
+  // Load gapi client fresh with new key
+  gapi.load('client', async () => {
+    try {
+      await gapi.client.init({ apiKey: settings.gsApiKey, discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'] });
+      gapiInited = true;
+      requestOAuth();
+    } catch(e) { setSheetsStatus('error','API init failed: ' + e.message); showToast('error','API init failed'); }
+  });
+}
+
+function requestOAuth() {
+  if (!gisInited) { setTimeout(requestOAuth, 200); return; }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: settings.gsClientId,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: async (resp) => {
+      if (resp.error) { setSheetsStatus('error','OAuth error: ' + resp.error); showToast('error','Google auth failed'); return; }
+      gsAccessToken = resp.access_token;
+      gapi.client.setToken({ access_token: gsAccessToken });
+      sessionStorage.setItem('lvt_gs_token', gsAccessToken);
+      updateSyncStatus('connected');
+      setSheetsStatus('success','Authorised! Setting up sheet…');
+      await ensureSheetSetup();
+      await pushToSheets();
+      setSheetsStatus('success','✓ Connected and synced!');
+      showToast('success','Google Sheets connected & synced!');
+      loadSettingsUI();
+    }
+  });
+  client.requestAccessToken({ prompt: 'consent' });
+}
+
+function disconnectSheets() {
+  if (gsAccessToken) { try { google.accounts.oauth2.revoke(gsAccessToken); } catch(e){} }
+  gsAccessToken = null; sessionStorage.removeItem('lvt_gs_token');
+  gapi.client.setToken('');
+  updateSyncStatus('disconnected');
+  setSheetsStatus('','');
+  showToast('info','Disconnected from Google Sheets');
+  loadSettingsUI();
+}
+
+function updateSyncStatus(state) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (state === 'connected') { dot.className='sync-dot connected'; label.textContent='Synced'; }
+  else if (state === 'syncing') { dot.className='sync-dot syncing'; label.textContent='Syncing…'; }
+  else if (state === 'error') { dot.className='sync-dot error'; label.textContent='Sync error'; }
+  else { dot.className='sync-dot'; label.textContent='Not connected'; }
+}
+
+function setSheetsStatus(type, msg) {
+  const el = document.getElementById('sheetsStatus');
+  if (!el) return;
+  const colors = { success: 'var(--green)', error: 'var(--red)', info: 'var(--blue)', '': 'var(--text-mid)' };
+  el.style.color = colors[type] || 'var(--text-mid)';
+  el.textContent = msg;
+}
+
+// Ensure the sheet has the right tab names and header rows
+async function ensureSheetSetup() {
+  const sid = settings.gsSheetId;
+  try {
+    // Get existing sheet names
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: sid });
+    const existingNames = meta.result.sheets.map(s => s.properties.title);
+    const requests = [];
+    if (!existingNames.includes('Cards')) requests.push({ addSheet: { properties: { title: 'Cards' } } });
+    if (!existingNames.includes('Purchases')) requests.push({ addSheet: { properties: { title: 'Purchases' } } });
+    if (!existingNames.includes('Meta')) requests.push({ addSheet: { properties: { title: 'Meta' } } });
+    if (requests.length) await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId: sid, resource: { requests } });
+    // Write headers
+    await gapi.client.sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: sid,
+      resource: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: 'Cards!A1', values: [CARD_HEADERS] },
+          { range: 'Purchases!A1', values: [PURCH_HEADERS] },
+        ]
+      }
+    });
+  } catch(e) { console.warn('Sheet setup error:', e); throw e; }
+}
+
+// Push all data to Sheets (full overwrite of data rows, keeping headers)
+async function pushToSheets() {
+  if (!gsAccessToken || !settings.gsSheetId) return;
+  isSyncing = true; updateSyncStatus('syncing');
+  const sid = settings.gsSheetId;
+  try {
+    const cardRows = cards.map(c => CARD_HEADERS.map(h => c[h]??''));
+    const purchRows = purchases.map(p => PURCH_HEADERS.map(h => p[h]??''));
+    const now = new Date().toISOString();
+    await gapi.client.sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: sid,
+      resource: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: 'Cards!A1', values: [CARD_HEADERS, ...cardRows] },
+          { range: 'Purchases!A1', values: [PURCH_HEADERS, ...purchRows] },
+          { range: 'Meta!A1', values: [['lastSync', now], ['cards', cards.length], ['purchases', purchases.length]] },
+        ]
+      }
+    });
+    // Clear any extra rows beyond current data
+    if (cardRows.length < 1000) {
+      await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId: sid, range: `Cards!A${cardRows.length+2}:Z10000` }).catch(()=>{});
+    }
+    isSyncing = false; syncPending = false;
+    updateSyncStatus('connected');
+    document.getElementById('syncLabel').textContent = 'Synced ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    isSyncing = false;
+    if (e.status === 401) { gsAccessToken=null; sessionStorage.removeItem('lvt_gs_token'); updateSyncStatus('error'); showToast('error','Google session expired — reconnect in Settings'); }
+    else { updateSyncStatus('error'); showToast('error','Sync failed: ' + (e.result?.error?.message || e.message || 'unknown error')); }
+  }
+}
+
+// Load data FROM sheets (overwrite local)
+async function loadFromSheets() {
+  if (!gsAccessToken || !settings.gsSheetId) { showToast('error','Not connected to Google Sheets'); return; }
+  const sid = settings.gsSheetId;
+  updateSyncStatus('syncing');
+  try {
+    const resp = await gapi.client.sheets.spreadsheets.values.batchGet({
+      spreadsheetId: sid,
+      ranges: ['Cards!A1:Z10000', 'Purchases!A1:Z10000']
+    });
+    const [cardsRange, purchRange] = resp.result.valueRanges;
+    const parseRows = (range, headers) => {
+      const rows = range.values||[];
+      if (rows.length < 2) return [];
+      const hdrs = rows[0];
+      return rows.slice(1).filter(r => r.some(Boolean)).map(row => {
+        const obj = {};
+        hdrs.forEach((h, i) => {
+          let v = row[i]??'';
+          if (h==='marketPrice'||h==='pricePaid'||h==='salePrice'||h==='cost'||h==='cardCount') v = v===''?null:parseFloat(v)||null;
+          else if (h==='sold') v = v==='true'||v===true;
+          else if (h==='addedAt') v = v===''?null:parseInt(v)||null;
+          obj[h] = v;
+        });
+        return obj;
+      });
+    };
+    cards = parseRows(cardsRange, CARD_HEADERS);
+    purchases = parseRows(purchRange, PURCH_HEADERS);
+    saveLocal();
+    renderDashboard(); renderCards(); renderPurchases();
+    updateSyncStatus('connected');
+    showToast('success', `Loaded ${cards.length} cards, ${purchases.length} purchases from Sheet`);
+  } catch(e) {
+    updateSyncStatus('error');
+    showToast('error','Load failed: ' + (e.result?.error?.message || e.message));
+  }
+}
+
+// Debounced sync queue — batches rapid saves into one sync call
+let syncTimer = null;
+function queueSync() {
+  if (!gsAccessToken || !settings.gsSheetId) return;
+  syncPending = true;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { if (!isSyncing) pushToSheets(); }, 1500);
+}
+
+function manualSync() {
+  if (!gsAccessToken || !settings.gsSheetId) { showToast('error','Not connected. Configure Google Sheets in Settings.'); return; }
+  pushToSheets().then(() => showToast('syncing','Synced to Google Sheets ✓'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS UI
+// ═══════════════════════════════════════════════════════════
+function loadSettingsUI() {
+  document.getElementById('gsApiKey').value = settings.gsApiKey||'';
+  document.getElementById('gsClientId').value = settings.gsClientId||'';
+  document.getElementById('gsSheetId').value = settings.gsSheetId||'';
+  document.getElementById('apiKeyInput').value = settings.apiKey||'';
+  document.getElementById('currencyInput').value = settings.currency||'GBP';
+  const banner = document.getElementById('sheetConnectedBanner');
+  const idEl = document.getElementById('connectedSheetId');
+  if (gsAccessToken && settings.gsSheetId) {
+    banner.style.display = 'flex'; idEl.textContent = 'Sheet ID: ' + settings.gsSheetId;
+  } else { banner.style.display = 'none'; }
+}
+function saveSettings() {
+  settings.apiKey = document.getElementById('apiKeyInput').value.trim();
+  settings.currency = document.getElementById('currencyInput').value;
+  saveLocal(); showToast('success','Settings saved');
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify({cards,purchases,settings,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`lvtcollectibles-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  showToast('success','JSON backup exported');
+}
+function importData(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const data=JSON.parse(ev.target.result);
+      if(data.cards) cards=data.cards; if(data.purchases) purchases=data.purchases;
+      if(data.settings) settings={...settings,...data.settings};
+      saveLocal(); queueSync(); renderDashboard(); renderCards(); renderPurchases();
+      showToast('success',`Imported ${cards.length} cards, ${purchases.length} purchases`);
+    } catch(err) { showToast('error','Import failed: invalid file'); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+function exportCSV() {
+  const rows=[['ID','Set Code','Number','Name','Set Name','Rarity','Variant','Condition','Market Price','Price Paid','Sale Price','Sold','Notes','Added']];
+  filteredCards().forEach(c=>rows.push([c.id,c.setCode,c.number,c.name,c.setName,c.rarity,c.variant,c.condition,c.marketPrice||'',c.pricePaid||'',c.salePrice||'',c.sold?'Yes':'No',c.notes||'',new Date(c.addedAt||0).toISOString().slice(0,10)]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`lvt-cards-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+function confirmClearAll() {
+  showConfirm('Clear All Data','This permanently deletes ALL cards and purchases. Are you sure?',()=>{
+    cards=[]; purchases=[]; saveLocal(); queueSync(); renderDashboard(); renderCards(); renderPurchases();
+    showToast('info','All data cleared');
+  },true);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+function showConfirm(title, msg, cb, danger=false) {
+  document.getElementById('confirmTitle').textContent=title.toUpperCase();
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOkBtn').className='btn '+(danger?'btn-danger':'btn-primary');
+  confirmCallback=cb; openModal('confirmModal');
+}
+document.getElementById('confirmOkBtn').onclick=()=>{ closeModal('confirmModal'); if(confirmCallback) confirmCallback(); };
+let toastTimer;
+function showToast(type, msg) {
+  const el=document.getElementById('toast');
+  const icons={success:'✓',error:'✕',info:'ℹ',syncing:'⟳'};
+  el.className='show '+type; document.getElementById('toastIcon').textContent=icons[type]||'';
+  document.getElementById('toastMsg').textContent=msg;
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));
+});
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+load();
+renderDashboard();
+
+// Wire up Google API callbacks (called by script tags via onload)
+window.gapiLoaded = gapiLoaded;
+window.gisLoaded = gisLoaded;
+
+// Auto-init GAPI if credentials already saved
+window.addEventListener('load', () => {
+  if (settings.gsApiKey && settings.gsClientId) {
+    gapiLoaded();
+  }
+  // GIS auto-inits via async script, flag when ready
+  const gisCheck = setInterval(() => {
+    if (typeof google !== 'undefined' && google.accounts) { gisInited=true; clearInterval(gisCheck); }
+  }, 200);
+});
+</script>
+
+<!-- Trigger GAPI load -->
+<script>
+  // Delay to ensure body is ready
+  setTimeout(() => {
+    if (typeof gapi !== 'undefined' && (typeof settings !== 'undefined') && settings.gsApiKey && settings.gsClientId) {
+      gapiLoaded();
+    }
+  }, 500);
+</script>
+
+</body>
+</html>
